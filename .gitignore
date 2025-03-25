@@ -49,3 +49,10 @@ package.json
 /man/
 /share/
 /src/
+
+# docker
+/filestore/
+/logs/
+/pgadmin/
+/postgresql/
+.env
