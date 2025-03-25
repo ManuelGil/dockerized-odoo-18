@@ -1,0 +1,132 @@
+version: "3.8"
+
+services:
+  odoo:
+    build: .
+    container_name: odoo
+    ports:
+      - "${ODOO_PORT}:8069"      # Odoo port from .env
+    env_file:
+      - .env                     # Load environment variables from .env file
+    environment:
+      - ODOO_DB_HOST=${ODOO_DB_HOST}
+      - ODOO_DB_PORT=${ODOO_DB_PORT}
+      - ODOO_DB_USER=${ODOO_DB_USER}
+      - ODOO_DB_PASSWORD=${ODOO_DB_PASSWORD}
+      - ODOO_DB_NAME=${ODOO_DB_NAME}
+      - ENVIRONMENT=${ENVIRONMENT}            # Example: development or production
+      - ODOO_DEBUG_ASSETS=${ODOO_DEBUG_ASSETS}  # True or False
+      - ODOO_DEV_MODE=${ODOO_DEV_MODE}          # e.g., assets
+      - ODOO_LOGFILE=${ODOO_LOGFILE}
+      - ADMIN_PASSWD=${ADMIN_PASSWD}
+    volumes:
+      - .:/app                                  # Bind mount the project directory (for development hot-reload)
+      - ./config:/config:ro                      # Read-only mount for configuration template
+      - ./logs:/var/log/odoo                     # Persist logs
+      - ./custom_addons:/mnt/extra-addons:ro       # Read-only mount for custom addons
+      - ./filestore:/home/odoo/.local/share/Odoo/filestore  # Persist filestore data
+      - ./sessions:/home/odoo/.local/share/Odoo/sessions    # Persist session data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8069/web/login"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - odoo_net
+
+  db:
+    image: postgres:15
+    container_name: odoo_db
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${ODOO_DB_USER}
+      - POSTGRES_PASSWORD=${ODOO_DB_PASSWORD}
+      - POSTGRES_DB=${ODOO_DB_NAME}
+    ports:
+      - "${DB_PORT:-5432}:5432"  # Use DB_PORT variable if defined, else default to 5432
+    volumes:
+      - ./postgresql/data/pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ODOO_DB_USER}"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: "1G"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - odoo_net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    env_file:
+      - .env
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./pgadmin/data:/var/lib/pgadmin
+      - ./pgadmin/config/servers.json:/pgadmin4/servers.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.2"
+          memory: "256M"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - odoo_net
+
+networks:
+  odoo_net:
+    driver: bridge
