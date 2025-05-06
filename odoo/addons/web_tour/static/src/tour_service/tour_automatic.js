@@ -53,7 +53,6 @@ export class TourAutomatic {
                     },
                 },
                 {
-                    initialDelay: () => (this.previousStepIsJustACheck ? 0 : null),
                     trigger: step.trigger ? () => step.findTrigger() : null,
                     timeout:
                         step.pause && this.debugMode
@@ -63,7 +62,6 @@ export class TourAutomatic {
                         if (delayToCheckUndeterminisms > 0) {
                             await step.checkForUndeterminisms(trigger, delayToCheckUndeterminisms);
                         }
-                        this.previousStepIsJustACheck = !step.hasAction;
                         const result = await step.doAction();
                         if (this.debugMode) {
                             console.log(trigger);
@@ -108,7 +106,6 @@ export class TourAutomatic {
 
         this.macro = new Macro({
             name: this.name,
-            checkDelay: this.checkDelay || 200,
             steps: macroSteps,
             onError: (error) => {
                 if (error.type === "Timeout") {

@@ -100,8 +100,9 @@ class ResPartner(models.Model):
     @api.model
     def _l10n_in_get_partner_vals_by_vat(self, vat):
         partner_data = self.enrich_by_gst(vat)
-        partner_data.pop('domain', None)
-        partner_data.pop('unspsc_codes', None)
+        for fname in partner_data:
+            if fname not in self.env['res.partner']._fields:
+                partner_data.pop(fname, None)
         partner_data.update({
             'country_id': partner_data.get('country_id', {}).get('id'),
             'state_id': partner_data.get('state_id', {}).get('id'),
@@ -114,3 +115,5 @@ class ResPartner(models.Model):
         self.ensure_one()
         state_id = self.env['res.country.state'].search([('l10n_in_tin', '=', self.vat[:2])], limit=1)
         self.state_id = state_id
+        if self.ref_company_ids:
+            self.ref_company_ids._update_l10n_in_fiscal_position()

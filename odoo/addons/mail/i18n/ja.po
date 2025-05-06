@@ -5,16 +5,16 @@
 # Translators:
 # Martin Trigaux, 2024
 # Ryoko Tsuda <ryoko@quartile.co>, 2024
-# Junko Augias, 2025
 # Wil Odoo, 2025
+# Junko Augias, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-19 20:36+0000\n"
+"POT-Creation-Date: 2025-04-07 20:36+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"Last-Translator: Junko Augias, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -637,14 +637,14 @@ msgstr "AI"
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_invitation.xml:0
 msgid "Accept"
-msgstr "受理"
+msgstr "参加"
 
 #. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/discuss/call/common/call_action_list.xml:0
 #: code:addons/mail/static/src/discuss/call/common/call_invitation.xml:0
 msgid "Accept with camera"
-msgstr "カメラで承諾"
+msgstr "カメラをオンにして参加"
 
 #. module: mail
 #. odoo-python
@@ -734,7 +734,7 @@ msgstr "購読の際デフォルトで有効化されます。"
 #: model:ir.model.fields,field_description:mail.field_mail_template__active
 #: model_terms:ir.ui.view,arch_db:mail.mail_alias_view_search
 msgid "Active"
-msgstr "有効化"
+msgstr "アクティブ"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_compose_message__res_domain
@@ -1375,7 +1375,7 @@ msgstr "本当に \"%(template_name)s\" を更新しますか?"
 #. module: mail
 #: model:ir.model.fields.selection,name:mail.selection__mail_activity_plan_template__responsible_type__on_demand
 msgid "Ask at launch"
-msgstr "ローンチ時に聞く"
+msgstr "開始時に確認"
 
 #. module: mail
 #. odoo-javascript
@@ -1470,7 +1470,7 @@ msgstr "オーディオプレイヤー:"
 #. module: mail
 #: model:ir.model.fields.selection,name:mail.selection__mail_alias__alias_contact__partners
 msgid "Authenticated Partners"
-msgstr "許可された取引先"
+msgstr "認証済み取引先"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_compose_message__author_id
@@ -2374,7 +2374,7 @@ msgstr "独自の電子メールサーバーを構成する"
 #. odoo-javascript
 #: code:addons/mail/static/src/core/common/message_confirm_dialog.js:0
 msgid "Confirm"
-msgstr "確認"
+msgstr "確定"
 
 #. module: mail
 #. odoo-javascript
@@ -2389,7 +2389,7 @@ msgstr "確認"
 #. module: mail
 #: model:ir.model.fields.selection,name:mail.selection__fetchmail_server__state__done
 msgid "Confirmed"
-msgstr "確認済"
+msgstr "確定済"
 
 #. module: mail
 #. odoo-javascript
@@ -5102,7 +5102,7 @@ msgstr "編集可能か"
 #: model:ir.model.fields,field_description:mail.field_mail_compose_message__is_mail_template_editor
 #: model:ir.model.fields,field_description:mail.field_mail_composer_mixin__is_mail_template_editor
 msgid "Is Editor"
-msgstr "編集者であり"
+msgstr "編集者である"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_discuss_channel__message_is_follower
@@ -6645,7 +6645,7 @@ msgstr "メモ"
 #: model:ir.model.fields.selection,name:mail.selection__discuss_channel_member__custom_notifications__no_notif
 #: model:ir.model.fields.selection,name:mail.selection__res_users_settings__channel_notifications__no_notif
 msgid "Nothing"
-msgstr "なし"
+msgstr "追跡しない"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_resend_partner__notification_id
@@ -7559,9 +7559,9 @@ msgid ""
 "- followers: only followers of the related document or members of following channels\n"
 msgstr ""
 "メールゲートウェイを使用したメッセージドキュメント投稿のポリシー\n"
-"- everyone: 誰にでも投稿可能\n"
-"- partners: 許可されたパートナーのみ\n"
-"- followers: 関連ドキュメントのフォロワーか、フォローしているチャンネルのメンバーのみ\n"
+"- 全員: 誰でも投稿可能\n"
+"- 取引先: 認証済みの取引先のみ\n"
+"- フォロワー: 関連ドキュメントのフォロワーか、フォローしているチャネルのメンバーのみ\n"
 
 #. module: mail
 #. odoo-javascript
@@ -8421,7 +8421,7 @@ msgstr "スケジュールされたアクション"
 #: model:ir.model.fields,field_description:mail.field_mail_template__scheduled_date
 #: model:ir.model.fields,field_description:mail.field_mail_template_preview__scheduled_date
 msgid "Scheduled Date"
-msgstr "スケジュール済日"
+msgstr "配信予定日"
 
 #. module: mail
 #: model:ir.model,name:mail.model_mail_scheduled_message
@@ -8639,12 +8639,6 @@ msgstr "言語を選択"
 #: code:addons/mail/static/src/views/web/fields/assign_user_command_hook.js:0
 msgid "Select a user..."
 msgstr "ユーザを選択..."
-
-#. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/discuss/core/common/discuss_notification_settings.xml:0
-msgid "Select duration"
-msgstr "所要時間を選択"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
@@ -10371,7 +10365,7 @@ msgstr "ファイルをアップロード"
 #. odoo-javascript
 #: code:addons/mail/static/src/core/web/activity_list_popover_item.xml:0
 msgid "Upload file"
-msgstr "ファイルをアップロードする"
+msgstr "ファイルをアップロード"
 
 #. module: mail
 #. odoo-javascript
@@ -11335,12 +11329,6 @@ msgstr "日:"
 #: code:addons/mail/static/src/discuss/call/common/call_participant_card.xml:0
 msgid "deaf"
 msgstr "耳が不自由な"
-
-#. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/discuss/core/common/discuss_notification_settings.xml:0
-msgid "default"
-msgstr "デフォルト"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_push__mail_push_device_id

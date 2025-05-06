@@ -535,8 +535,8 @@ class TestSaleToInvoice(TestSaleCommon):
 
     def test_invoice_combo_product(self):
         """ Test creating an invoice for a SO with a combo product. """
-        product_a = self._create_product(name="Horse-meat burger")
-        product_b = self._create_product(name="French fries")
+        product_a = self._create_product(name="Horse-meat burger", invoice_policy='delivery')
+        product_b = self._create_product(name="French fries", invoice_policy='delivery')
         combo_a = self.env['product.combo'].create({
             'name': "Burger",
             'combo_item_ids': [
@@ -572,25 +572,35 @@ class TestSaleToInvoice(TestSaleCommon):
                     'price_unit': 0,
                     'tax_id': [],
                 }),
-                Command.create({
-                    'name': 'Horse-meat burger',
-                    'product_id': product_a.id,
-                    'product_uom_qty': 3,
-                    'price_unit': 5.0,
-                    'tax_id': [],
-                }),
-                Command.create({
-                    'name': 'French fries',
-                    'product_id': product_b.id,
-                    'product_uom_qty': 3,
-                    'price_unit': 5.0,
-                    'tax_id': [],
-                }),
             ]
         })
+        sale_order.order_line = [Command.create({
+            'product_id': product.id,
+            'product_uom_qty': 3,
+            'price_unit': 5.0,
+            'tax_id': [],
+            'combo_item_id': combo.combo_item_ids.id,
+            'linked_line_id': sale_order.order_line.id,
+        }) for product, combo in zip(product_a + product_b, combo_a + combo_b)]
 
         # Confirm the SO
         sale_order.action_confirm()
+
+        self.assertEqual(sale_order.order_line.mapped('qty_to_invoice'), [0.0, 0.0, 0.0])
+        deliverables = sale_order.order_line.filtered(
+            lambda sol: sol.product_id.invoice_policy == 'delivery'
+        )
+        self.assertEqual(
+            deliverables,
+            sale_order.order_line.linked_line_ids,
+            "Only combo item lines should be invoiced on delivery.",
+        )
+        deliverables.qty_delivered = 3
+        self.assertEqual(
+            sale_order.order_line.mapped('qty_to_invoice'),
+            [3.0, 3.0, 3.0],
+            "Delivering the combo items lines should update the combo product line as well.",
+        )
 
         # Context
         self.context = {
@@ -613,22 +623,42 @@ class TestSaleToInvoice(TestSaleCommon):
                 'name': 'Meal Menu x 3',
                 'display_type': 'line_section',
                 'product_id': False,
-                'quantity': 0,
+                'quantity': 3,
                 'price_unit': 0,
+                'sequence': 0,
             },
             {
                 'name': 'Horse-meat burger',
                 'display_type': 'product',
                 'product_id': product_a.id,
                 'quantity': 3,
-                'price_unit': 5.0
+                'price_unit': 5.0,
+                'sequence': 1,
             },
             {
                 'name': 'French fries',
                 'display_type': 'product',
                 'product_id': product_b.id,
                 'quantity': 3,
-                'price_unit': 5.0
+                'price_unit': 5.0,
+                'sequence': 2,
+            },
+        ])
+        self.assertRecordValues(sale_order.order_line, [
+            {
+                'product_id': product_combo.id,
+                'qty_to_invoice': 0,
+                'qty_invoiced': 3,
+            },
+            {
+                'product_id': product_a.id,
+                'qty_to_invoice': 0,
+                'qty_invoiced': 3,
+            },
+            {
+                'product_id': product_b.id,
+                'qty_to_invoice': 0,
+                'qty_invoiced': 3,
             },
         ])
 
@@ -1160,6 +1190,31 @@ class TestSaleToInvoice(TestSaleCommon):
         self.assertEqual(sol_prod_deliver.amount_to_invoice, 0.0)
         self.assertEqual(sol_prod_deliver.amount_invoiced, sol_prod_deliver.price_total / 2)
 
+    def test_amount_to_invoice_with_discount(self):
+        """ Test the amount_to_invoice field when a discount is applied on the SO line. """
+
+        so = self.env['sale.order'].create({
+            'partner_id': self.partner_a.id,
+            'order_line': [
+                Command.create({
+                    'product_id': self.company_data['product_order_no'].id,
+                    'product_uom_qty': 5,
+                    'price_unit': 100,
+                    'discount': 10,
+                }),
+            ],
+        })
+
+        so.action_confirm()
+
+        self.assertEqual(so.amount_to_invoice, 450.0, "The amount to invoice should be 450.0")
+
+        invoice = so._create_invoices()
+        invoice.invoice_line_ids.quantity = 3
+        invoice.action_post()
+
+        self.assertEqual(so.amount_to_invoice, 180.0, "The amount to invoice should be 180.0")
+
     def test_invoice_line_name_has_product_name(self):
         """ Testing that when invoicing a sales order, the invoice line name ALWAYS contains the product name. """
         so = self.sale_order
@@ -1254,3 +1309,29 @@ class TestSaleToInvoice(TestSaleCommon):
         self.assertEqual(len(credit_note.invoice_line_ids), 2)
         # so the credit note cannot be considered a reversal of the invoice
         self.assertFalse(credit_note.reversed_entry_id)
+
+    def test_refund_salesteam(self):
+        """Check that salesperson & sales team doesn't change when creating a refund."""
+        salesperson = self.user
+        team1 = self.company_data['default_sale_team']
+        team2 = team1.copy({'name': "Team 2"})
+        team1.member_ids = salesperson
+        self.sale_order.write({
+            'user_id': salesperson,
+            'team_id': team2.id,
+        })
+
+        # Set all prices to negative values to force a refund
+        self.sale_order.order_line.price_unit = -10
+        self.sale_order.action_confirm()
+        invoice = self.sale_order._create_invoices(final=True)
+
+        self.assertEqual(invoice.move_type, 'out_refund')
+        self.assertEqual(
+            invoice.invoice_user_id, salesperson,
+            "Invoice salesperson should be the same as the order's salesperson",
+        )
+        self.assertEqual(
+            invoice.team_id, team2,
+            "Invoice team should be the same as the order's team",
+        )

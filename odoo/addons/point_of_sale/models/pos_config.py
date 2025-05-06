@@ -216,16 +216,37 @@ class PosConfig(models.Model):
             'records': records
         })
 
-    def read_config_open_orders(self, domain, record_ids):
-        all_domain = expression.OR([domain, [('id', 'in', record_ids.get('pos.order')), ('config_id', '=', self.id)]])
-        all_orders = self.env['pos.order'].search(all_domain)
-        delete_record_ids = {}
+        for config in self.trusted_config_ids:
+            config._notify('SYNCHRONISATION', {
+                'static_records': static_records,
+                'session_id': config.current_session_id.id,
+                'login_number': 0,
+                'records': records
+            })
 
-        for model, ids in record_ids.items():
+    def read_config_open_orders(self, domain, record_ids=[]):
+        delete_record_ids = {}
+        dynamic_records = {}
+
+        for model, domain in domain.items():
+            ids = record_ids[model]
             delete_record_ids[model] = [id for id in ids if not self.env[model].browse(id).exists()]
+            dynamic_records[model] = self.env[model].search(domain)
+
+        pos_order_data = dynamic_records.get('pos.order') or self.env['pos.order']
+        data = pos_order_data.read_pos_data([], self.id)
+
+        for key, records in dynamic_records.items():
+            fields = self.env[key]._load_pos_data_fields(self.id)
+            ids = list(set(records.ids + [record['id'] for record in data.get(key, [])]))
+            dynamic_records[key] = self.env[key].browse(ids).read(fields, load=False)
+
+        for key, value in data.items():
+            if key not in dynamic_records:
+                dynamic_records[key] = value
 
         return {
-            'dynamic_records': all_orders.filtered_domain(domain).read_pos_data([], self.id),
+            'dynamic_records': dynamic_records,
             'deleted_record_ids': delete_record_ids,
         }
 
@@ -279,6 +300,7 @@ class PosConfig(models.Model):
     def _compute_current_session(self):
         """If there is an open session, store it to current_session_id / current_session_State.
         """
+        self.session_ids.fetch(["state"])
         for pos_config in self:
             opened_sessions = pos_config.session_ids.filtered(lambda s: s.state != 'closed')
             rescue_sessions = opened_sessions.filtered('rescue')
@@ -321,6 +343,21 @@ class PosConfig(models.Model):
                 pos_config.pos_session_state = False
                 pos_config.pos_session_duration = 0
                 pos_config.current_user_id = False
+
+    @api.constrains('rounding_method')
+    def _check_rounding_method_strategy(self):
+        for config in self:
+            if config.cash_rounding and config.rounding_method.strategy != 'add_invoice_line':
+                selection_value = "Add a rounding line"
+                for key, val in self.env["account.cash.rounding"]._fields["strategy"]._description_selection(config.env):
+                    if key == "add_invoice_line":
+                        selection_value = val
+                        break
+                raise ValidationError(_(
+                    "The cash rounding strategy of the point of sale %(pos)s must be: '%(value)s'",
+                    pos=config.name,
+                    value=selection_value,
+                ))
 
     def _check_profit_loss_cash_journal(self):
         if self.cash_control and self.payment_method_ids:
@@ -405,6 +442,9 @@ class PosConfig(models.Model):
             if config.customer_display_type == 'proxy' and (not config.is_posbox or not config.proxy_ip):
                 raise UserError(_("You must set the iot box's IP address to use an IoT-connected screen. You'll find the field under the 'IoT Box' option."))
 
+    def _config_sequence_implementation(self):
+        return 'standard'
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -416,6 +456,7 @@ class PosConfig(models.Model):
                 'prefix': "%s/" % vals['name'],
                 'code': "pos.order",
                 'company_id': vals.get('company_id', False),
+                'implementation': self._config_sequence_implementation(),
             }
             # force sequence_id field to new pos.order sequence
             vals['sequence_id'] = IrSequence.create(val).id
@@ -788,12 +829,11 @@ class PosConfig(models.Model):
             self.get_limited_product_count(),
         )
         product_ids = [r[0] for r in self.env.execute_query(sql)]
-        special_products = self._get_special_products().filtered(
-            lambda product: not product.sudo().company_id
-                            or product.sudo().company_id == self.company_id
-        )
-        product_ids.extend(special_products.ids)
-        products = self.env['product.product'].browse(product_ids)
+        product_ids.extend(self._get_special_products().ids)
+        products = self.env['product.product'].search([('id', 'in', product_ids)])
+        # sort products by product_ids order
+        id_to_index = {pid: index for index, pid in enumerate(product_ids)}
+        products = products.sorted(key=lambda p: id_to_index[p.id])
         product_combo = products.filtered(lambda p: p['type'] == 'combo')
         product_in_combo = product_combo.combo_ids.combo_item_ids.product_id
         products_available = products | product_in_combo
@@ -964,6 +1004,8 @@ class PosConfig(models.Model):
 
     @api.model
     def _load_furniture_data(self):
+        if not self.env.user.has_group('base.group_system'):
+            raise AccessError(_("You must have 'Administration Settings' access to load furniture data."))
         product_module = self.env['ir.module.module'].search([('name', '=', 'product')])
         if not product_module.demo:
             convert.convert_file(self.env, 'product', 'data/product_category_demo.xml', None, noupdate=True, mode='init', kind='data')
@@ -978,6 +1020,8 @@ class PosConfig(models.Model):
 
     @api.model
     def load_onboarding_clothes_scenario(self):
+        if not self.env.user.has_group('base.group_system'):
+            raise AccessError(_("You must have 'Administration Settings' access to load clothes data."))
         ref_name = 'point_of_sale.pos_config_clothes'
         if not self.env.ref(ref_name, raise_if_not_found=False):
             convert.convert_file(self.env, 'point_of_sale', 'data/scenarios/clothes_data.xml', None, noupdate=True, mode='init', kind='data')

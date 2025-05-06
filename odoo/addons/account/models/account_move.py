@@ -799,7 +799,7 @@ class AccountMove(models.Model):
     @api.depends('invoice_date', 'company_id')
     def _compute_date(self):
         for move in self:
-            if not move.invoice_date:
+            if not move.invoice_date or not move.is_invoice():
                 if not move.date:
                     move.date = fields.Date.context_today(self)
                 continue
@@ -912,8 +912,8 @@ class AccountMove(models.Model):
     @api.depends('date', 'journal_id', 'move_type', 'name', 'posted_before', 'sequence_number', 'sequence_prefix', 'state')
     def _compute_name_placeholder(self):
         for move in self:
-            if (not move.name or move.name == '/') and not move._get_last_sequence():
-                sequence_format_string, sequence_format_values = move._get_sequence_format_param(move._get_starting_sequence())
+            if (not move.name or move.name == '/') and move.date and not move._get_last_sequence():
+                sequence_format_string, sequence_format_values = move._get_next_sequence_format()
                 sequence_format_values['seq'] = sequence_format_values['seq'] + 1
                 move.name_placeholder = sequence_format_string.format(**sequence_format_values)
             else:
@@ -2800,7 +2800,7 @@ class AccountMove(models.Model):
             return self.env['account.move.line']._fields[field].convert_to_write(record[field], record)
 
         def get_tax_line_tracked_fields(line):
-            return ('amount_currency', 'balance')
+            return ('amount_currency', 'balance', 'analytic_distribution')
 
         def get_base_line_tracked_fields(line):
             grouping_key = AccountTax._prepare_base_line_grouping_key(fake_base_line)
@@ -3288,7 +3288,8 @@ class AccountMove(models.Model):
             for move in self:
                 if 'tax_totals' in vals:
                     super(AccountMove, move).write({'tax_totals': vals['tax_totals']})
-        if 'journal_id' in vals:
+
+        if any(field in vals for field in ['journal_id', 'currency_id']):
             self.line_ids._check_constrains_account_id_journal_id()
 
         return res

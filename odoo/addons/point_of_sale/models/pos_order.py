@@ -96,6 +96,10 @@ class PosOrder(models.Model):
         else:
             pos_order = existing_order
 
+            # If the order is belonging to another session, it must be moved to the current session first
+            if order.get('session_id') and order['session_id'] != pos_order.session_id.id:
+                pos_order.write({'session_id': order['session_id']})
+
             # Save lines and payments before to avoid exception if a line is deleted
             # when vals change the state to 'paid'
             for field in ['lines', 'payment_ids']:
@@ -136,7 +140,7 @@ class PosOrder(models.Model):
 
     def _process_saved_order(self, draft):
         self.ensure_one()
-        if not draft:
+        if not draft and self.state != 'cancel':
             try:
                 self.action_pos_order_paid()
             except psycopg2.DatabaseError:
@@ -746,7 +750,7 @@ class PosOrder(models.Model):
             'invoice_date': invoice_date.astimezone(timezone).date(),
             'fiscal_position_id': self.fiscal_position_id.id,
             'invoice_line_ids': self._prepare_invoice_lines(),
-            'invoice_payment_term_id': self.partner_id.property_payment_term_id.id or False,
+            'invoice_payment_term_id': False,
             'invoice_cash_rounding_id': self.config_id.rounding_method.id,
         }
         if self.refunded_order_id.account_move:
@@ -1343,7 +1347,7 @@ class PosOrderLine(models.Model):
     @api.model
     def _load_pos_data_fields(self, config_id):
         return [
-            'qty', 'attribute_value_ids', 'custom_attribute_value_ids', 'price_unit', 'skip_change', 'uuid', 'price_subtotal', 'price_subtotal_incl', 'order_id', 'note', 'price_type',
+            'qty', 'attribute_value_ids', 'custom_attribute_value_ids', 'price_unit', 'skip_change', 'uuid', 'price_subtotal', 'price_subtotal_incl', 'order_id', 'note', 'price_type', 'write_date',
             'product_id', 'discount', 'tax_ids', 'pack_lot_ids', 'customer_note', 'refunded_qty', 'price_extra', 'full_product_name', 'refunded_orderline_id', 'combo_parent_id', 'combo_line_ids', 'combo_item_id', 'refund_orderline_ids'
         ]
 
@@ -1351,10 +1355,11 @@ class PosOrderLine(models.Model):
     def _is_field_accepted(self, field):
         return field in self._fields and not field in ['combo_parent_id', 'combo_line_ids']
 
-    @api.depends('refund_orderline_ids')
+    @api.depends('refund_orderline_ids', 'refund_orderline_ids.order_id.state')
     def _compute_refund_qty(self):
         for orderline in self:
-            orderline.refunded_qty = -sum(orderline.mapped('refund_orderline_ids.qty'))
+            refund_order_line = orderline.refund_orderline_ids.filtered(lambda l: l.order_id.state != 'cancel')
+            orderline.refunded_qty = -sum(refund_order_line.mapped('qty'))
 
     def _prepare_refund_data(self, refund_order, PosOrderLineLot):
         """
@@ -1682,7 +1687,7 @@ class PosOrderLineLot(models.Model):
 
     @api.model
     def _load_pos_data_fields(self, config_id):
-        return ['lot_name', 'pos_order_line_id']
+        return ['lot_name', 'pos_order_line_id', 'write_date']
 
 class AccountCashRounding(models.Model):
     _name = 'account.cash.rounding'

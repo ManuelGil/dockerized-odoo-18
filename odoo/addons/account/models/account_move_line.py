@@ -5,7 +5,7 @@ import logging
 import re
 
 from odoo import api, fields, models, Command, _
-from odoo.exceptions import ValidationError, UserError
+from odoo.exceptions import ValidationError, UserError, RedirectWarning
 from odoo.osv import expression
 from odoo.tools import frozendict, format_date, float_compare, format_list, Query
 from odoo.tools.sql import create_index, SQL
@@ -183,6 +183,10 @@ class AccountMoveLine(models.Model):
         index='btree_not_null',
         copy=False,
         help="The bank statement used for bank reconciliation")
+    commercial_partner_country = fields.Many2one(
+        string="Commercial Partner Country",
+        related="move_id.commercial_partner_id.country_id",
+    )
 
     # === Tax fields === #
     tax_ids = fields.Many2many(
@@ -608,6 +612,7 @@ class AccountMoveLine(models.Model):
                     company_id=line.company_id.id,
                     partner_id=line.partner_id.id,
                     move_type=line.move_id.move_type,
+                    journal_id=line.journal_id.id,
                 )
                 if account_id:
                     line.account_id = account_id
@@ -960,7 +965,7 @@ class AccountMoveLine(models.Model):
             else:
                 line.epd_key = False
 
-    @api.depends('move_id.needed_terms', 'account_id', 'analytic_distribution', 'tax_ids', 'tax_tag_ids', 'company_id')
+    @api.depends('move_id.needed_terms', 'account_id', 'analytic_distribution', 'tax_ids', 'tax_tag_ids', 'company_id', 'price_subtotal')
     def _compute_epd_needed(self):
         # TODO: The computation of early payment is weird because based on the 'price_subtotal'
         # that already have it's own taxes computation (by design because the sync_dynamic lines only
@@ -2610,6 +2615,14 @@ class AccountMoveLine(models.Model):
 
         return partials
 
+    def _get_exchange_journal(self, company):
+        return company.currency_exchange_journal_id
+
+    def _get_exchange_account(self, company, amount):
+        if amount > 0.0:
+            return company.expense_currency_exchange_account_id
+        return company.income_currency_exchange_account_id
+
     def _prepare_exchange_difference_move_vals(self, amounts_list, company=None, exchange_date=None, **kwargs):
         """ Prepare values to create later the exchange difference journal entry.
         The exchange difference journal entry is there to fix the debit/credit of lines when the journal items are
@@ -2629,9 +2642,7 @@ class AccountMoveLine(models.Model):
         if not company:
             return
 
-        journal = company.currency_exchange_journal_id
-        expense_exchange_account = company.expense_currency_exchange_account_id
-        income_exchange_account = company.income_currency_exchange_account_id
+        journal = self._get_exchange_journal(company)
         accounting_exchange_date = journal.with_context(move_date=exchange_date).accounting_date if journal else date.min
 
         move_vals = {
@@ -2664,10 +2675,7 @@ class AccountMoveLine(models.Model):
             else:
                 continue
 
-            if amount_residual_to_fix > 0.0:
-                exchange_line_account = expense_exchange_account
-            else:
-                exchange_line_account = income_exchange_account
+            exchange_line_account = self._get_exchange_account(company, amount_residual_to_fix)
 
             sequence = len(move_vals['line_ids'])
             line_vals = [
@@ -3006,15 +3014,37 @@ class AccountMoveLine(models.Model):
     # -------------------------------------------------------------------------
 
     def _validate_analytic_distribution(self):
+        lines_with_missing_analytic_distribution = self.env['account.move.line']
         for line in self.filtered(lambda line: line.display_type == 'product'):
-            line._validate_distribution(**{
-                        'product': line.product_id.id,
-                        'account': line.account_id.id,
-                        'business_domain': line.move_id.move_type in ['out_invoice', 'out_refund', 'out_receipt'] and 'invoice'
-                                           or line.move_id.move_type in ['in_invoice', 'in_refund', 'in_receipt'] and 'bill'
-                                           or 'general',
-                        'company_id': line.company_id.id,
-            })
+            try:
+                line._validate_distribution(
+                    company_id=line.company_id.id,
+                    product=line.product_id.id,
+                    account=line.account_id.id,
+                    business_domain=(
+                        'invoice' if line.move_id.is_sale_document(True)
+                        else 'bill' if line.move_id.is_purchase_document(True)
+                        else 'general'
+                    ),
+                )
+            except ValidationError:
+                lines_with_missing_analytic_distribution += line
+        if lines_with_missing_analytic_distribution:
+            msg = _("One or more lines require a 100% analytic distribution.")
+            if len(self.move_id) == 1:
+                raise ValidationError(msg)
+            raise RedirectWarning(
+                message=msg,
+                action={
+                    'view_mode': 'list',
+                    'name': _('Items With Missing Analytic Distribution'),
+                    'res_model': 'account.move.line',
+                    'type': 'ir.actions.act_window',
+                    'domain': [('id', 'in', lines_with_missing_analytic_distribution.ids)],
+                    'views': [(self.env.ref('account.view_move_line_tree').id, 'list')],
+                },
+                button_text=_("See items"),
+            )
 
     def _create_analytic_lines(self):
         """ Create analytic items upon validation of an account.move.line having an analytic distribution.

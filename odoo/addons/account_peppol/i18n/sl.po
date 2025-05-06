@@ -4,6 +4,7 @@
 # 
 # Translators:
 # Wil Odoo, 2025
+# Aleš Pipan, 2025
 # 
 msgid ""
 msgstr ""
@@ -11,7 +12,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-03-19 20:36+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"Last-Translator: Aleš Pipan, 2025\n"
 "Language-Team: Slovenian (https://app.transifex.com/odoo/teams/41243/sl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -22,19 +23,25 @@ msgstr ""
 #. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/wizard/account_move_send_wizard.py:0
-msgid " (Consumer)"
-msgstr ""
-
-#. module: account_peppol
-#. odoo-python
-#: code:addons/account_peppol/wizard/account_move_send_wizard.py:0
 msgid " (Customer not on Peppol)"
 msgstr ""
 
 #. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/wizard/account_move_send_wizard.py:0
-msgid " (Demo/Test mode)"
+msgid " (Demo)"
+msgstr ""
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/wizard/account_move_send_wizard.py:0
+msgid " (Test)"
+msgstr ""
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/wizard/account_move_send_wizard.py:0
+msgid " (no VAT)"
 msgstr ""
 
 #. module: account_peppol
@@ -89,17 +96,17 @@ msgstr ""
 #. module: account_peppol
 #: model:ir.model,name:account_peppol.model_account_move_send
 msgid "Account Move Send"
-msgstr ""
+msgstr "Pošlji premik računa"
 
 #. module: account_peppol
 #: model:ir.model,name:account_peppol.model_account_move_send_batch_wizard
 msgid "Account Move Send Batch Wizard"
-msgstr ""
+msgstr "Čarovnik za paketno pošiljanje premikov računa"
 
 #. module: account_peppol
 #: model:ir.model,name:account_peppol.model_account_move_send_wizard
 msgid "Account Move Send Wizard"
-msgstr ""
+msgstr "Čarovnik za pošiljanje premika računa"
 
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_account_journal__is_peppol_journal
@@ -155,7 +162,7 @@ msgstr ""
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid "Allow sending and receiving invoices through the PEPPOL network"
-msgstr ""
+msgstr "Omogoči pošiljanje in prejemanje računov prek omrežja PEPPOL"
 
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_res_partner__available_peppol_edi_formats
@@ -475,7 +482,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:account_peppol.field_res_partner__invoice_sending_method
 #: model:ir.model.fields,field_description:account_peppol.field_res_users__invoice_sending_method
 msgid "Invoice sending"
-msgstr ""
+msgstr "Pošiljanje računov"
 
 #. module: account_peppol
 #: model:ir.model.fields,help:account_peppol.field_account_peppol_service_wizard__service_json
@@ -789,20 +796,8 @@ msgstr ""
 
 #. module: account_peppol
 #. odoo-python
-#: code:addons/account_peppol/wizard/peppol_registration.py:0
-msgid "Registered as a receiver."
-msgstr ""
-
-#. module: account_peppol
-#. odoo-python
 #: code:addons/account_peppol/tools/demo_utils.py:0
 msgid "Registered as a sender (demo)."
-msgstr ""
-
-#. module: account_peppol
-#. odoo-python
-#: code:addons/account_peppol/wizard/peppol_registration.py:0
-msgid "Registered as a sender."
 msgstr ""
 
 #. module: account_peppol
@@ -814,7 +809,6 @@ msgstr ""
 #. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/models/res_config_settings.py:0
-#: code:addons/account_peppol/wizard/peppol_registration.py:0
 msgid "Registered to receive documents via Peppol."
 msgstr ""
 
@@ -941,8 +935,6 @@ msgid ""
 msgstr ""
 
 #. module: account_peppol
-#. odoo-python
-#: code:addons/account_peppol/wizard/peppol_registration.py:0
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_partner_form_account_peppol
 msgid ""
 "The recommended identification method for Belgium is your Company Registry "
@@ -1033,7 +1025,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/account_peppol/models/account_move_send.py:0
 msgid "View Partner(s)"
-msgstr ""
+msgstr "Ogled partnerja(-jev)"
 
 #. module: account_peppol
 #. odoo-python
@@ -1127,8 +1119,16 @@ msgstr ""
 #. odoo-python
 #: code:addons/account_peppol/wizard/peppol_registration.py:0
 msgid ""
+"Your Peppol registration will be activated soon. You can already send "
+"invoices."
+msgstr ""
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/wizard/peppol_registration.py:0
+msgid ""
 "Your company is already registered on another Access Point for receiving "
-"invoices.We will register you on Odoo as a sender only."
+"invoices.We will register you as a sender only."
 msgstr ""
 
 #. module: account_peppol
@@ -1144,7 +1144,6 @@ msgstr ""
 #. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/models/res_config_settings.py:0
-#: code:addons/account_peppol/wizard/peppol_registration.py:0
 msgid ""
 "Your registration on Peppol network should be activated within a day. The "
 "updated status will be visible in Settings."

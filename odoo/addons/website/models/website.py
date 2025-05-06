@@ -244,10 +244,18 @@ class Website(models.Model):
     def _compute_blocked_third_party_domains(self):
         for website in self:
             custom_list = website.sudo().custom_blocked_third_party_domains
+
+            full_list = DEFAULT_BLOCKED_THIRD_PARTY_DOMAINS
             if custom_list:
-                full_list = f'{DEFAULT_BLOCKED_THIRD_PARTY_DOMAINS}\n{custom_list}'
-            else:
-                full_list = DEFAULT_BLOCKED_THIRD_PARTY_DOMAINS
+                # Note: each line of the custom list is already ensured to not
+                # have leading or trailing whitespaces.
+                lines = custom_list.splitlines()
+                custom_domains = '\n'.join([line for line in lines if line[0] != '#'])
+                if lines[0].startswith("#ignore_default"):
+                    full_list = custom_domains
+                else:
+                    full_list += f"\n{custom_domains}"
+
             website.blocked_third_party_domains = full_list
 
     def _get_blocked_third_party_domains_list(self):
@@ -413,6 +421,9 @@ class Website(models.Model):
         configurator_action_todo = self.env.ref('website.website_configurator_todo')
         return configurator_action_todo.action_launch()
 
+    def _idna_url(self, url):
+        return get_base_domain(url.lower(), True).encode('idna').decode('ascii')
+
     def _is_indexable_url(self, url):
         """
         Returns True if the given url has to be indexed by search engines.
@@ -425,7 +436,7 @@ class Website(models.Model):
         :param url: the url to check
         :return: True if the url has to be indexed, False otherwise
         """
-        return get_base_domain(url.lower(), True) == get_base_domain(self.domain.lower(), True)
+        return self._idna_url(url) == self._idna_url(self.domain)
 
     # ----------------------------------------------------------
     # Configurator

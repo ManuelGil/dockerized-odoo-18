@@ -394,3 +394,49 @@ registry.category("web_tour.tours").add("PoSSettleQuotation", {
             ReceiptScreen.isShown(),
         ].flat(),
 });
+
+registry.category("web_tour.tours").add("POSSalePaymentScreenInvoiceOrder", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            ProductScreen.addOrderline("Product Test", "1"),
+            ProductScreen.clickPartnerButton(),
+            ProductScreen.clickCustomer("Test Partner"),
+            ProductScreen.clickPayButton(),
+
+            PaymentScreen.clickPaymentMethod("Bank"),
+            PaymentScreen.clickInvoiceButton(),
+            PaymentScreen.clickValidate(),
+            ReceiptScreen.receiptIsThere(),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("test_settle_order_with_lot", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            PosSale.settleNthOrder(1, { loadSN: true }),
+            PosSale.selectedOrderLinesHasLots("Product A", ["1001", "1002"]),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("test_down_payment_displayed", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            PosSale.downPaymentFirstOrder("+10"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.clickPaymentMethod("Bank"),
+            PaymentScreen.clickValidate(),
+            ReceiptScreen.clickNextOrder(),
+            PosSale.settleNthOrder(1),
+            Order.hasLine({
+                productName: "Down Payment",
+                quantity: "1.0",
+                price: "-1.15",
+            }),
+        ].flat(),
+});

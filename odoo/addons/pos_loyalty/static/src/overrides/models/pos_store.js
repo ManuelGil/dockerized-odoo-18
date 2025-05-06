@@ -78,7 +78,7 @@ patch(PosStore.prototype, {
         }
 
         const order = this.get_order();
-        if (order.finalized) {
+        if (!order || order.finalized) {
             return;
         }
         updateRewardsMutex.exec(() => {
@@ -134,7 +134,8 @@ patch(PosStore.prototype, {
      */
     async updatePrograms() {
         const order = this.get_order();
-        if (!order) {
+        // 'order.delivery_provider_id' check is used for UrbanPiper orders (as loyalty points and rewards are not allowed for UrbanPiper orders)
+        if (!order || order.delivery_provider_id) {
             return;
         }
         const changesPerProgram = {};
@@ -226,6 +227,8 @@ patch(PosStore.prototype, {
                         couponPointChange.expiration_date = serializeDate(
                             luxon.DateTime.now().plus({ year: 1 })
                         );
+                        couponPointChange.code = order.get_selected_orderline()?.gift_code;
+                        couponPointChange.partner_id = order.get_partner()?.id;
                     }
 
                     order.uiState.couponPointChanges[coupon.id] = couponPointChange;

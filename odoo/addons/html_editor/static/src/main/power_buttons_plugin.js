@@ -49,6 +49,7 @@ export class PowerButtonsPlugin extends Plugin {
         "localOverlay",
         "powerbox",
         "userCommand",
+        "history",
     ];
     resources = {
         layout_geometry_change_handlers: this.updatePowerButtons.bind(this),
@@ -101,9 +102,12 @@ export class PowerButtonsPlugin extends Plugin {
         }
         const block = closestBlock(editableSelection.anchorNode);
         const element = closestElement(editableSelection.anchorNode);
+        const blockRect = block.getBoundingClientRect();
+        const editableRect = this.editable.getBoundingClientRect();
         if (
             editableSelection.isCollapsed &&
             element?.matches(baseContainerGlobalSelector) &&
+            editableRect.bottom > blockRect.top &&
             isEmptyBlock(block) &&
             !this.services.ui.isSmall &&
             !closestElement(editableSelection.anchorNode, "td") &&
@@ -120,8 +124,21 @@ export class PowerButtonsPlugin extends Plugin {
                 const shouldHide = Boolean(isAvailable && !isAvailable(editableSelection));
                 buttonElement.classList.toggle("d-none", shouldHide); // 2nd arg must be a boolean
             }
-            this.setPowerButtonsPosition(block, direction);
+            this.setPowerButtonsPosition(block, blockRect, direction);
         }
+    }
+
+    getPlaceholderWidth(block) {
+        this.dependencies.history.disableObserver();
+        const clone = block.cloneNode(true);
+        clone.innerText = clone.getAttribute("placeholder");
+        clone.style.width = "fit-content";
+        clone.style.visibility = "hidden";
+        this.editable.appendChild(clone);
+        const { width } = clone.getBoundingClientRect();
+        this.editable.removeChild(clone);
+        this.dependencies.history.enableObserver();
+        return width;
     }
 
     /**
@@ -129,22 +146,18 @@ export class PowerButtonsPlugin extends Plugin {
      * @param {HTMLElement} block
      * @param {string} direction
      */
-    setPowerButtonsPosition(block, direction) {
+    setPowerButtonsPosition(block, blockRect, direction) {
         const overlayStyles = this.powerButtonsOverlay.style;
         // Resetting the position of the power buttons.
         overlayStyles.top = "0px";
         overlayStyles.left = "0px";
-        const blockRect = block.getBoundingClientRect();
         const buttonsRect = this.powerButtonsContainer.getBoundingClientRect();
+        const placeholderWidth = this.getPlaceholderWidth(block) + 20;
         if (direction === "rtl") {
             overlayStyles.left =
-                blockRect.right -
-                buttonsRect.width -
-                buttonsRect.x -
-                buttonsRect.width * 0.85 +
-                "px";
+                blockRect.right - buttonsRect.width - buttonsRect.x - placeholderWidth + "px";
         } else {
-            overlayStyles.left = blockRect.left - buttonsRect.x + buttonsRect.width * 0.85 + "px";
+            overlayStyles.left = blockRect.left - buttonsRect.x + placeholderWidth + "px";
         }
         overlayStyles.top = blockRect.top - buttonsRect.top + "px";
         overlayStyles.height = blockRect.height + "px";

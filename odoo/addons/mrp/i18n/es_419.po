@@ -4,7 +4,7 @@
 # 
 # Translators:
 # Wil Odoo, 2024
-# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2024
+# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2025
 # Fernanda Alvarez, 2025
 # 
 msgid ""
@@ -764,8 +764,8 @@ msgid ""
 "Allow manufacturing users to modify quantities to consume, without the need "
 "for prior approval"
 msgstr ""
-"Permitir a los usuarios de fabricación modificar las cantidades por consumir"
-" sin aprobación previa"
+"Permita que los usuarios de la aplicación Manufactura modifiquen las "
+"cantidades por consumir sin necesidad de recibir aprobación previa"
 
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_production__use_create_components_lots
@@ -1186,7 +1186,7 @@ msgstr "Bloqueado"
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__blocked_by_workorder_ids
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_workorder_form_view_inherit
 msgid "Blocked By"
-msgstr "Bloqueado por"
+msgstr "Bloqueada por"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workcenter__blocked_time
@@ -2045,7 +2045,7 @@ msgstr "Producciones retrasadas"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.res_config_settings_view_form
 msgid "Delegate part of the production process to subcontractors"
-msgstr "Delegar parte del proceso de producción a contratistas"
+msgstr "Delegue parte del proceso de producción a los subcontratistas"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production__delivery_count
@@ -2157,7 +2157,7 @@ msgstr "Documentación"
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_filter
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_work_order_search
 msgid "Done"
-msgstr "Listo"
+msgstr "Disponible"
 
 #. module: mrp
 #: model:ir.model.fields.selection,name:mrp.selection__mrp_production__state__draft
@@ -3297,7 +3297,7 @@ msgstr "Plazo de fabricación"
 #: model:stock.route,name:mrp.route_warehouse0_manufacture
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_report_stock_rule
 msgid "Manufacture"
-msgstr "Fabricación"
+msgstr "Manufactura"
 
 #. module: mrp
 #. odoo-python
@@ -3360,7 +3360,7 @@ msgstr "Fabricado en los últimos 365 días"
 #: model_terms:ir.ui.view,arch_db:mrp.res_config_settings_view_form
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_bom_filter
 msgid "Manufacturing"
-msgstr "Fabricación"
+msgstr "Manufactura"
 
 #. module: mrp
 #. odoo-javascript
@@ -4167,7 +4167,7 @@ msgstr "Piezas"
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_tree_view
 msgid "Plan"
-msgstr "Plan"
+msgstr "Planificar"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_workcenter_kanban
@@ -4335,7 +4335,8 @@ msgstr "Defecto en el proceso"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.res_config_settings_view_form
 msgid "Process manufacturing orders from the barcode application"
-msgstr "Procesar órdenes de fabricación desde la aplicación Código de barras"
+msgstr ""
+"Procese las órdenes de fabricación desde la aplicación Código de barras"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.res_config_settings_view_form
@@ -5094,8 +5095,8 @@ msgid ""
 "Set the order that work orders should be processed in. Activate the feature "
 "within each BoM's Miscellaneous tab"
 msgstr ""
-"Establezca la disposición en que se deben procesar las órdenes de trabajo. "
-"Active la función en la pestaña Varios de cada LdM."
+"Configure el orden en el que se deben procesar las órdenes de trabajo. "
+"Active la función en la pestaña Varios de cada lista de materiales."
 
 #. module: mrp
 #: model:ir.actions.act_window,name:mrp.action_mrp_configuration
@@ -6575,10 +6576,10 @@ msgid ""
 "produce a product. They are attached to bills of materials that will define "
 "the required components."
 msgstr ""
-"Las operaciones de órdenes de trabajo le permiten crear y administrar las "
-"tareas de fabricación que deben seguirse dentro de sus centros de trabajo "
-"para elaborar un producto. Se adjuntan a las listas de materiales que "
-"definirán los componentes necesarios."
+"Las operaciones de órdenes de trabajo le permiten crear y gestionar las "
+"tareas de fabricación a seguir en sus centros de trabajo para elaborar un "
+"producto. Estas se adjuntan a las listas de materiales que definirán los "
+"componentes necesarios."
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_stock_move__workorder_id

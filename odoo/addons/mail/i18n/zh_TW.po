@@ -4,16 +4,16 @@
 # 
 # Translators:
 # Martin Trigaux, 2024
-# Tony Ng, 2025
 # Wil Odoo, 2025
+# Tony Ng, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-19 20:36+0000\n"
+"POT-Creation-Date: 2025-04-07 20:36+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"Last-Translator: Tony Ng, 2025\n"
 "Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -6359,7 +6359,7 @@ msgstr "新訊息"
 #. odoo-javascript
 #: code:addons/mail/static/src/core/web/thread_patch.xml:0
 msgid "New messages appear here."
-msgstr "新訊息出現在這裡。"
+msgstr "新訊息會在此處顯示。"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_tracking_value_form
@@ -8609,12 +8609,6 @@ msgid "Select a user..."
 msgstr "選擇一名使用者⋯"
 
 #. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/discuss/core/common/discuss_notification_settings.xml:0
-msgid "Select duration"
-msgstr "選擇持續時間"
-
-#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
 msgid "Select the content filter used for filtering GIFs"
 msgstr "選擇用於篩選 GIF 的內容篩選器"
@@ -9491,7 +9485,7 @@ msgstr ""
 #: model:ir.model.fields,help:mail.field_res_partner__user_id
 #: model:ir.model.fields,help:mail.field_res_users__user_id
 msgid "The internal user in charge of this contact."
-msgstr "負責此聯繫人的內部使用者."
+msgstr "負責此聯絡人的內部使用者。"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_alias_view_form
@@ -11296,12 +11290,6 @@ msgstr "天："
 #: code:addons/mail/static/src/discuss/call/common/call_participant_card.xml:0
 msgid "deaf"
 msgstr "已靜音"
-
-#. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/discuss/core/common/discuss_notification_settings.xml:0
-msgid "default"
-msgstr "預設"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_push__mail_push_device_id
